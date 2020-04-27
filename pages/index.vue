@@ -1,5 +1,8 @@
 <template>
   <div class="container">
+
+    <app-errors v-if="loadErrors.length" :loadErrors="loadErrors"  />
+
     <span class="loading-indicator" v-if="!userList.length">Loading...</span>
     <app-users-list
       :users="userList"
@@ -36,13 +39,17 @@ import UsersList from '~/components/Users/List.vue'
 import TextAlert from '~/components/Common/TextAlert.vue'
 import Pagination from '~/components/Pagination'
 import RadioFilter from '~/components/Filters/RadioFilter'
+import Errors from '~/components/Common/Errors'
+
+import Validator from '~/utils/Validator'
 
 export default {
   components: {
     'app-users-list': UsersList,
     'app-text-alert': TextAlert,
     'app-pagination': Pagination,
-    'app-radio-filter': RadioFilter
+    'app-radio-filter': RadioFilter,
+    'app-errors': Errors
   },
   data () {
     return {
@@ -69,6 +76,21 @@ export default {
       page,
       rowsPerPage,
       checkedValue: gender
+    }
+  },
+  mounted () {
+    const { page, rowsPerPage } = this.$route.query
+    const pageValidator = new Validator(page, 'page')
+    const pageResult = pageValidator.isEmpty().notZero().getResult()
+    const pageErrors = pageResult.errors
+    if (pageErrors.length) {
+      this.$store.dispatch('addError', pageErrors)
+    }
+    const rowsValidator = new Validator(rowsPerPage, 'rowsPerPage')
+    const rowsResult = rowsValidator.isEmpty().notZero().getResult()
+    const rowsErrors = rowsResult.errors
+    if (rowsErrors.length) {
+      this.$store.dispatch('addError', rowsErrors)
     }
   },
   computed: {
